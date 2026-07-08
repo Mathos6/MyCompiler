@@ -1,3 +1,4 @@
+ 
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -75,8 +76,17 @@ std::vector<Token> tokenize(const std::string& str) {
 }
 
 std::string tokens_to_asm(const std::vector<Token>& tokens) {
-    std::string output;
-    for 
+    std::stringstream output;
+    output << ".global _start\n_start:\n";
+    for (int i = 0; i+2 < tokens.size(); ++i) {
+        if (tokens.at(i).type == TokenType::_return &&
+            tokens.at(i+1).type == TokenType::int_lit &&
+            tokens.at(i+2).type == TokenType::semi) {
+            output << "\tmov x0, "<< tokens.at(i+1).value.value()<< '\n'
+                << "\tmov x8, #93\n\tsvc 0\n";
+        }
+    }
+    return output.str();
 }
 
 
@@ -103,8 +113,16 @@ int main(int argc, char* argv[]) {
         
     std::cout << argv[1]<< '\n';
     std::cout << str << std::endl;
-    std::vector<Token> contents = tokenize(str);
+    std::vector<Token> tokens = tokenize(str);
+    {
+        std::ofstream fileOut("asm.s");
+        fileOut << tokens_to_asm(tokens);
+    }
+    system("aarch64-linux-gnu-as asm.s -o asm.o");
+    system("aarch64-linux-gnu-ld asm.o -o exec");
     return EXIT_SUCCESS;
 }
+
+
 
 
