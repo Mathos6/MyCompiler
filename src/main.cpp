@@ -6,21 +6,8 @@
 #include <vector>
 
 #include "tokenization.hpp"
-
-
-std::string tokens_to_asm(const std::vector<Token>& tokens) {
-    std::stringstream output;
-    output << ".global _start\n_start:\n";
-    for (int i = 0; i+2 < tokens.size(); ++i) {
-        if (tokens.at(i).type == TokenType::exit &&
-            tokens.at(i+1).type == TokenType::int_lit &&
-            tokens.at(i+2).type == TokenType::semi) {
-            output << "\tmov x0, "<< tokens.at(i+1).value.value()<< '\n'
-                << "\tmov x8, #93\n\tsvc 0\n";
-        }
-    }
-    return output.str();
-}
+#include "parser.hpp"
+#include "generation.hpp"
 
 
 int main(int argc, char* argv[]) {
@@ -45,10 +32,13 @@ int main(int argc, char* argv[]) {
     std::cout << code_source << std::endl;
     Tokenizer tokenizer(std::move(code_source));
     std::vector<Token> tokens = tokenizer.tokenize();
+
+    Parser parser(std::move(tokens));
+    node::Exit tree = parser.parse();
+    Generator generator(std::move(tree));
     {
         std::ofstream fileOut("asm.s");
-        std::cout << tokens_to_asm(tokens);
-        fileOut << tokens_to_asm(tokens);
+        fileOut << generator.generate();
     }
     system("aarch64-linux-gnu-as asm.s -o asm.o");
     system("aarch64-linux-gnu-ld asm.o -o exec");
