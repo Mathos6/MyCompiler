@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     ss << file.rdbuf();
     std::string code_source = ss.str();
         
-    std::cout << argv[1]<< '\n';
+    std::cout << argv[1]<< ":\n";
     std::cout << code_source << std::endl;
     Tokenizer tokenizer(std::move(code_source));
     std::vector<Token> tokens = tokenizer.tokenize();

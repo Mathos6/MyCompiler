@@ -68,7 +68,7 @@ private:
     }
     
     inline Token consume(const size_t n = 1) {
-        Token token =  m_tokens.at(++m_ind);
+        Token token =  m_tokens.at(m_ind);
         m_ind = m_ind + n;
         return token;
     }
